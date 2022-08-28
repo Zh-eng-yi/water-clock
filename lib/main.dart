@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:syncfusion_flutter_calendar/calendar.dart';
+import 'to_do_page.dart';
+import 'calendar.dart';
 
 void main() {
   runApp(const MyApp());
@@ -19,6 +20,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
+// MyHomePage displays two pages, to-do list and a calendar.
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key}) : super(key: key);
 
@@ -28,7 +30,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 0;
-  PageController _pageController = PageController();
+  final PageController _pageController = PageController();
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -41,8 +43,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
   @override
   Widget build(BuildContext context) {
-    // final PageController controller = PageController(initialPage: 0);
-    return Scaffold(
+    return Scaffold( 
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -61,8 +62,8 @@ class _MyHomePageState extends State<MyHomePage> {
       body: PageView(
         controller: _pageController,
         children: const <Widget> [
-          Center(child: Text('Page 1')),
-          Center(child: Text('Page 2')),
+          ToDoPage(),
+          Calendar(),
         ],
         onPageChanged: (page) {
           setState(() {
