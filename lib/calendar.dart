@@ -12,6 +12,38 @@ class Calendar extends StatefulWidget {
 
 class _CalendarState extends State<Calendar> {
   List<Appointment> events = [];
+  final DateTime today = DateTime.now();
+  DateTime startDate = DateTime.now();
+  DateTime endDate = DateTime.now();
+  
+  void _selectDate(BuildContext context, bool isStart) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: today,
+      firstDate: DateTime(today.year - 5, today.month, today.day),
+      lastDate: DateTime(today.year + 5, today.month, today.day),
+    );
+    if (picked != null) {
+      if (isStart) {
+        setState(() {
+          startDate = picked;
+        });
+      } else {
+        setState(() {
+          endDate = picked;
+        });
+      }
+    }
+  }
+  _showPickers() {
+    showDatePicker(
+      context: context,
+      initialDate: today,
+      firstDate: DateTime(today.year - 5, today.month, today.day),
+      lastDate: DateTime(today.year + 5, today.month, today.day),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,7 +75,7 @@ class _CalendarState extends State<Calendar> {
                                     ),
                                     isDense: true,
                                     contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 15, vertical: 10)),
+                                        horizontal: 15, vertical: 8)),
                                 onChanged: (val) {},
                               ),
                             ),
@@ -65,23 +97,31 @@ class _CalendarState extends State<Calendar> {
                                     ),
                                     isDense: true,
                                     contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 15, vertical: 10)),
+                                        horizontal: 15, vertical: 8)),
                                 onChanged: (val) {},
                               ),
                             ),
                             Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: const [
+                                Text('Start time'),
+                                Text('End time'),
+                              ]
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 ElevatedButton(
-                                  child: Text('Start Date'),
+                                  child: Text('${startDate.year}/${startDate.month}/${startDate.day}'),
                                   onPressed: () {
-                                    
+                                    // _showPickers();
+                                    _selectDate(context, true);
                                   },
                                 ),
+                                const Text(' ~ '),
                                 ElevatedButton(
                                   child: Text('End Date'),
-                                  onPressed: () {
-                                    
-                                  },
+                                  onPressed: () {},
                                 ),
                               ]
                             ),
@@ -105,17 +145,20 @@ class _CalendarState extends State<Calendar> {
                             //     },
                             //   ),
                             // ),
-                            Row(children: [
-                              const Spacer(),
-                              OutlinedButton(
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                  },
-                                  child: const Text('Cancel')),
-                              const Spacer(),
-                              ElevatedButton(
-                                  onPressed: () {}, child: const Text('Save')),
-                              const Spacer(),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                OutlinedButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: const Text('Cancel')),
+                                OutlinedButton(
+                                    onPressed: () {},
+                                    child: const Text('Reset')),
+                                ElevatedButton(
+                                    onPressed: () {},
+                                    child: const Text('Save')),
                             ]),
                           ],
                         ));
