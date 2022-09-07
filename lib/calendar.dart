@@ -13,44 +13,47 @@ class Calendar extends StatefulWidget {
 class _CalendarState extends State<Calendar> {
   List<Appointment> events = [];
   final DateTime today = DateTime.now();
-  late final DateTime defaultStart =
-      DateTime(today.year, today.month, today.day, 9, 0, 0);
-  late final DateTime defaultEnd =
-      DateTime(today.year, today.month, today.day, 11, 59, 0);
-  late DateTime selectedDateTime = defaultStart;
+  late final DateTime defaultStart = DateTime(today.year, today.month, today.day, 9, 0, 0);
+  late final DateTime defaultEnd = DateTime(today.year, today.month, today.day, 23, 59, 0);
   late DateTime startDateTime = defaultStart;
   late DateTime endDateTime = defaultEnd;
-  String eventName = '';
-  String eventNote = '';
+  TextEditingController nameController = TextEditingController();
+  TextEditingController noteController = TextEditingController();
 
   void resetEvent() {
     startDateTime = defaultStart;
     endDateTime = defaultEnd;
-    eventName = '';
-    eventNote = '';
+    nameController.clear();
+    noteController.clear();
   }
 
-  Future<DateTime?> pickDate() => showDatePicker(
-        context: context,
-        initialDate: selectedDateTime,
-        firstDate: DateTime(selectedDateTime.year - 5, selectedDateTime.month,
-            selectedDateTime.day),
-        lastDate: DateTime(selectedDateTime.year + 5, selectedDateTime.month,
-            selectedDateTime.day),
-      );
+  Future<DateTime?> pickDate(bool isStart){
+    DateTime date = isStart? startDateTime : endDateTime;
+    return showDatePicker(
+      context: context,
+      initialDate: date,
+      firstDate: DateTime(date.year - 5, date.month,
+          date.day),
+      lastDate: DateTime(date.year + 5, date.month,
+          date.day),
+    );
+  }
 
-  Future<TimeOfDay?> pickTime() => showTimePicker(
-        context: context,
-        initialTime: TimeOfDay(
-          hour: selectedDateTime.hour,
-          minute: selectedDateTime.minute,
-        ),
-      );
+  Future<TimeOfDay?> pickTime(bool isStart) {
+    DateTime date = isStart ? startDateTime : endDateTime;
+    return showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(
+        hour: date.hour,
+        minute: date.minute,
+      ),
+    );
+  }
 
-  Future<DateTime?> pickDateAndTime() async {
-    DateTime? date = await pickDate();
+  Future<DateTime?> pickDateAndTime(bool isStart) async {
+    DateTime? date = await pickDate(isStart);
     if (date == null) return null;
-    TimeOfDay? time = await pickTime();
+    TimeOfDay? time = await pickTime(isStart);
     if (time == null) return null;
     return DateTime(date.year, date.month, date.day, time.hour, time.minute);
   }
@@ -66,7 +69,7 @@ class _CalendarState extends State<Calendar> {
                       padding:
                           const EdgeInsets.only(left: 30, right: 120, top: 10),
                       child: TextFormField(
-                        initialValue: eventName,
+                        controller: nameController,
                         decoration: const InputDecoration(
                             labelText: 'Event name',
                             enabledBorder: OutlineInputBorder(
@@ -81,16 +84,13 @@ class _CalendarState extends State<Calendar> {
                             isDense: true,
                             contentPadding: EdgeInsets.symmetric(
                                 horizontal: 15, vertical: 8)),
-                        onChanged: (val) {
-                          eventName = val;
-                        },
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 30, vertical: 10),
                       child: TextFormField(
-                        initialValue: eventNote,
+                        controller: noteController,
                         decoration: const InputDecoration(
                             labelText: 'Event Description',
                             enabledBorder: OutlineInputBorder(
@@ -105,9 +105,6 @@ class _CalendarState extends State<Calendar> {
                             isDense: true,
                             contentPadding: EdgeInsets.symmetric(
                                 horizontal: 15, vertical: 8)),
-                        onChanged: (val) {
-                          eventNote = val;
-                        },
                       ),
                     ),
                     Row(
@@ -117,38 +114,51 @@ class _CalendarState extends State<Calendar> {
                           Text('End time'),
                         ]),
                     Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                      ElevatedButton(
-                        child: Text(
-                            '${startDateTime.year}/${startDateTime.month}/${startDateTime.day} ${startDateTime.hour.toString().padLeft(2, '0')}:${startDateTime.minute.toString().padLeft(2, '0')}'),
-                        onPressed: () async {
-                          final DateTime? picked = await pickDateAndTime();
-                          if (picked != null) {
-                            setState(() {
-                              startDateTime = picked;
-                              if (startDateTime.compareTo(endDateTime) > 0) {
-                                endDateTime = startDateTime;
-                              }
-                            });
-                          }
-                        },
+                      SizedBox(
+                        width: 110,
+                        height: 45,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            final DateTime? picked = await pickDateAndTime(true);
+                            if (picked != null) {
+                              setState(() {
+                                startDateTime = picked;
+                                if (startDateTime.compareTo(endDateTime) > 0) {
+                                  endDateTime = startDateTime;
+                                }
+                              });
+                            }
+                          },
+                          child: Text(
+                            '${startDateTime.year}/${startDateTime.month}/${startDateTime.day} ${startDateTime.hour.toString().padLeft(2, '0')}:${startDateTime.minute.toString().padLeft(2, '0')}',
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
                       ),
                       const Text(' ~ '),
-                      ElevatedButton(
-                        child: Text(
-                            '${endDateTime.year}/${endDateTime.month}/${endDateTime.day} ${endDateTime.hour.toString().padLeft(2, '0')}:${endDateTime.minute.toString().padLeft(2, '0')}'),
-                        onPressed: () async {
-                          final DateTime? picked = await pickDateAndTime();
-                          if (picked != null) {
-                            setState(
-                              () {
-                                endDateTime = picked;
-                              },
-                            );
-                          }
-                        },
+                      SizedBox(
+                        width: 110,
+                        height: 45,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            final DateTime? picked = await pickDateAndTime(false);
+                            if (picked != null) {
+                              setState(
+                                () {
+                                  endDateTime = picked;
+                                },
+                              );
+                            }
+                          },
+                          child: Text(
+                              '${endDateTime.year}/${endDateTime.month}/${endDateTime.day} ${endDateTime.hour.toString().padLeft(2, '0')}:${endDateTime.minute.toString().padLeft(2, '0')}',
+                              textAlign: TextAlign.center,),
+                        ),
                       ),
                     ]),
-                    Row(
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           OutlinedButton(
@@ -165,10 +175,16 @@ class _CalendarState extends State<Calendar> {
                               child: const Text('Reset')),
                           ElevatedButton(
                               onPressed: () {
+                                events.add(Appointment(
+                                  startTime: startDateTime,
+                                  endTime: endDateTime,
+                                  subject: nameController.text,
+                                  ));
                                 resetEvent();
+                                Navigator.pop(context);
                               },
                               child: const Text('Save')),
-                        ]),
+                        ]),)
                   ],
                 )));
   }
