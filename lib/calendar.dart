@@ -13,12 +13,15 @@ class Calendar extends StatefulWidget {
 class _CalendarState extends State<Calendar> {
   List<Appointment> events = [];
   final DateTime today = DateTime.now();
-  late final DateTime defaultStart = DateTime(today.year, today.month, today.day, 9, 0, 0);
-  late final DateTime defaultEnd = DateTime(today.year, today.month, today.day, 23, 59, 0);
+  late final DateTime defaultStart =
+      DateTime(today.year, today.month, today.day, 9, 0, 0);
+  late final DateTime defaultEnd =
+      DateTime(today.year, today.month, today.day, 23, 59, 0);
   late DateTime startDateTime = defaultStart;
   late DateTime endDateTime = defaultEnd;
   TextEditingController nameController = TextEditingController();
   TextEditingController noteController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   void resetEvent() {
     startDateTime = defaultStart;
@@ -27,16 +30,26 @@ class _CalendarState extends State<Calendar> {
     noteController.clear();
   }
 
-  Future<DateTime?> pickDate(bool isStart){
-    DateTime date = isStart? startDateTime : endDateTime;
-    return showDatePicker(
-      context: context,
-      initialDate: date,
-      firstDate: DateTime(date.year - 5, date.month,
-          date.day),
-      lastDate: DateTime(date.year + 5, date.month,
-          date.day),
-    );
+  Future<DateTime?> pickDate(bool isStart) {
+    if (isStart) {
+      return showDatePicker(
+        context: context,
+        initialDate: startDateTime,
+        firstDate: DateTime(
+            defaultStart.year - 5, defaultStart.month, defaultStart.day),
+        lastDate: DateTime(
+            defaultStart.year + 5, defaultStart.month, defaultStart.day),
+      );
+    } else {
+      return showDatePicker(
+        context: context,
+        initialDate: endDateTime,
+        firstDate: DateTime(
+            startDateTime.year, startDateTime.month, startDateTime.day),
+        lastDate: DateTime(
+            defaultStart.year + 5, defaultStart.month, defaultStart.day),
+      );
+    }
   }
 
   Future<TimeOfDay?> pickTime(bool isStart) {
@@ -65,126 +78,156 @@ class _CalendarState extends State<Calendar> {
             builder: (context, setState) => SimpleDialog(
                   title: const Text('Add an event'),
                   children: <Widget>[
-                    Padding(
-                      padding:
-                          const EdgeInsets.only(left: 30, right: 120, top: 10),
-                      child: TextFormField(
-                        controller: nameController,
-                        decoration: const InputDecoration(
-                            labelText: 'Event name',
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(10),
-                              ),
-                              borderSide: BorderSide(
-                                color: Color.fromARGB(255, 230, 104, 102),
-                                width: 1,
-                              ),
-                            ),
-                            isDense: true,
-                            contentPadding: EdgeInsets.symmetric(
-                                horizontal: 15, vertical: 8)),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 30, vertical: 10),
-                      child: TextFormField(
-                        controller: noteController,
-                        decoration: const InputDecoration(
-                            labelText: 'Event Description',
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(10),
-                              ),
-                              borderSide: BorderSide(
-                                color: Color.fromARGB(255, 230, 104, 102),
-                                width: 1,
-                              ),
-                            ),
-                            isDense: true,
-                            contentPadding: EdgeInsets.symmetric(
-                                horizontal: 15, vertical: 8)),
-                      ),
-                    ),
-                    Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: const [
-                          Text('Start time'),
-                          Text('End time'),
-                        ]),
-                    Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                      SizedBox(
-                        width: 110,
-                        height: 45,
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            final DateTime? picked = await pickDateAndTime(true);
-                            if (picked != null) {
-                              setState(() {
-                                startDateTime = picked;
-                                if (startDateTime.compareTo(endDateTime) > 0) {
-                                  endDateTime = startDateTime;
+                    Form(
+                        key: _formKey,
+                        child: Column(children: [
+                          Padding(
+                            padding: const EdgeInsets.only(
+                                left: 30, right: 120, top: 10),
+                            child: TextFormField(
+                              validator: (value) {
+                                if (nameController.text.isEmpty) {
+                                  return "Required field";
+                                } else {
+                                  return null;
                                 }
-                              });
-                            }
-                          },
-                          child: Text(
-                            '${startDateTime.year}/${startDateTime.month}/${startDateTime.day} ${startDateTime.hour.toString().padLeft(2, '0')}:${startDateTime.minute.toString().padLeft(2, '0')}',
-                            textAlign: TextAlign.center,
+                              },
+                              controller: nameController,
+                              decoration: const InputDecoration(
+                                  labelText: 'Event name',
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(
+                                      Radius.circular(10),
+                                    ),
+                                    borderSide: BorderSide(
+                                      color: Colors.grey,//fromARGB(255, 230, 104, 102),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  isDense: true,
+                                  contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 15, vertical: 8)),
+                            ),
                           ),
-                        ),
-                      ),
-                      const Text(' ~ '),
-                      SizedBox(
-                        width: 110,
-                        height: 45,
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            final DateTime? picked = await pickDateAndTime(false);
-                            if (picked != null) {
-                              setState(
-                                () {
-                                  endDateTime = picked;
-                                },
-                              );
-                            }
-                          },
-                          child: Text(
-                              '${endDateTime.year}/${endDateTime.month}/${endDateTime.day} ${endDateTime.hour.toString().padLeft(2, '0')}:${endDateTime.minute.toString().padLeft(2, '0')}',
-                              textAlign: TextAlign.center,),
-                        ),
-                      ),
-                    ]),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          OutlinedButton(
-                              onPressed: () {
-                                Navigator.pop(context);
-                              },
-                              child: const Text('Cancel')),
-                          OutlinedButton(
-                              onPressed: () {
-                                setState((() {
-                                  resetEvent();
-                                }));
-                              },
-                              child: const Text('Reset')),
-                          ElevatedButton(
-                              onPressed: () {
-                                events.add(Appointment(
-                                  startTime: startDateTime,
-                                  endTime: endDateTime,
-                                  subject: nameController.text,
-                                  ));
-                                resetEvent();
-                                Navigator.pop(context);
-                              },
-                              child: const Text('Save')),
-                        ]),)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 30, vertical: 10),
+                            child: TextFormField(
+                              controller: noteController,
+                              decoration: const InputDecoration(
+                                  labelText: 'Event Description',
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(
+                                      Radius.circular(10),
+                                    ),
+                                    borderSide: BorderSide(
+                                      color: Colors.grey,//fromARGB(255, 230, 104, 102),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  isDense: true,
+                                  contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 15, vertical: 8)),
+                            ),
+                          ),
+                          Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: const [
+                                Text('Start time'),
+                                Text('End time'),
+                              ]),
+                          Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 110,
+                                  height: 45,
+                                  child: ElevatedButton(
+                                    onPressed: () async {
+                                      final DateTime? picked =
+                                          await pickDateAndTime(true);
+                                      if (picked != null) {
+                                        setState(() {
+                                          startDateTime = picked;
+                                          if (startDateTime
+                                                  .compareTo(endDateTime) >
+                                              0) {
+                                            endDateTime = startDateTime;
+                                          }
+                                        });
+                                      }
+                                    },
+                                    child: Text(
+                                      '${startDateTime.year}/${startDateTime.month}/${startDateTime.day} ${startDateTime.hour.toString().padLeft(2, '0')}:${startDateTime.minute.toString().padLeft(2, '0')}',
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ),
+                                const Text(' ~ '),
+                                SizedBox(
+                                  width: 110,
+                                  height: 45,
+                                  child: ElevatedButton(
+                                    onPressed: () async {
+                                      final DateTime? picked =
+                                          await pickDateAndTime(false);
+                                      if (picked != null) {
+                                        setState(
+                                          () {
+                                            endDateTime = picked;
+                                          },
+                                        );
+                                      }
+                                    },
+                                    child: Text(
+                                      '${endDateTime.year}/${endDateTime.month}/${endDateTime.day} ${endDateTime.hour.toString().padLeft(2, '0')}:${endDateTime.minute.toString().padLeft(2, '0')}',
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ),
+                              ]),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 10),
+                            child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  OutlinedButton(
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                      },
+                                      child: const Text('Cancel')),
+                                  OutlinedButton(
+                                      onPressed: () {
+                                        setState((() {
+                                          resetEvent();
+                                        }));
+                                      },
+                                      child: const Text('Reset')),
+                                  ElevatedButton(
+                                      onPressed: () {
+                                        if (!_formKey.currentState!.validate()) {
+                                        } else if (startDateTime
+                                                .compareTo(endDateTime) >
+                                            0) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(const SnackBar(
+                                                  content: Text(
+                                                      'Error. Event end time should be following start time.')));
+                                        } else {
+                                          events.add(Appointment(
+                                            startTime: startDateTime,
+                                            endTime: endDateTime,
+                                            subject: nameController.text,
+                                          ));
+                                          resetEvent();
+                                          Navigator.pop(context);
+                                        }
+                                      },
+                                      child: const Text('Save')),
+                                ]),
+                          )
+                        ]))
                   ],
                 )));
   }
