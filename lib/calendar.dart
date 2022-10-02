@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:water_clock/event_editing_page.dart';
+import 'event_detail_page.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 
@@ -71,7 +73,7 @@ class _CalendarState extends State<Calendar> {
     return DateTime(date.year, date.month, date.day, time.hour, time.minute);
   }
 
-  Future openDialog() {
+  Future addEventDialog() {
     return showCupertinoDialog(
         context: context,
         builder: (context) => StatefulBuilder(
@@ -83,7 +85,7 @@ class _CalendarState extends State<Calendar> {
                         child: Column(children: [
                           Padding(
                             padding: const EdgeInsets.only(
-                                left: 30, right: 120, top: 10),
+                                left: 30, right: 30, top: 10),
                             child: TextFormField(
                               validator: (value) {
                                 if (nameController.text.isEmpty) {
@@ -100,18 +102,19 @@ class _CalendarState extends State<Calendar> {
                                       Radius.circular(10),
                                     ),
                                     borderSide: BorderSide(
-                                      color: Colors.grey,//fromARGB(255, 230, 104, 102),
+                                      color: Colors
+                                          .grey, //fromARGB(255, 230, 104, 102),
                                       width: 1,
                                     ),
                                   ),
                                   isDense: true,
                                   contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 15, vertical: 8)),
+                                      horizontal: 15, vertical: 10)),
                             ),
                           ),
                           Padding(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 30, vertical: 10),
+                                horizontal: 30, vertical: 15),
                             child: TextFormField(
                               controller: noteController,
                               decoration: const InputDecoration(
@@ -121,13 +124,14 @@ class _CalendarState extends State<Calendar> {
                                       Radius.circular(10),
                                     ),
                                     borderSide: BorderSide(
-                                      color: Colors.grey,//fromARGB(255, 230, 104, 102),
+                                      color: Colors
+                                          .grey, //fromARGB(255, 230, 104, 102),
                                       width: 1,
                                     ),
                                   ),
                                   isDense: true,
                                   contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 15, vertical: 8)),
+                                      horizontal: 15, vertical: 10)),
                             ),
                           ),
                           Row(
@@ -206,14 +210,15 @@ class _CalendarState extends State<Calendar> {
                                       child: const Text('Reset')),
                                   ElevatedButton(
                                       onPressed: () {
-                                        if (!_formKey.currentState!.validate()) {
+                                        if (!_formKey.currentState!
+                                            .validate()) {
                                         } else if (startDateTime
                                                 .compareTo(endDateTime) >
                                             0) {
                                           ScaffoldMessenger.of(context)
                                               .showSnackBar(const SnackBar(
                                                   content: Text(
-                                                      'Error. Event end time should be following start time.')));
+                                                      'Error. Event end time prior to the start time.')));
                                         } else {
                                           events.add(Appointment(
                                             startTime: startDateTime,
@@ -240,7 +245,8 @@ class _CalendarState extends State<Calendar> {
           actions: [
             IconButton(
               onPressed: () {
-                openDialog();
+                // addEventDialog();
+                showDialog(context: context, builder: (_) => const EventEditingPage());
               },
               icon: const Icon(Icons.add_task_rounded),
               iconSize: 30,
@@ -248,8 +254,12 @@ class _CalendarState extends State<Calendar> {
           ],
         ),
         body: SfCalendar(
-          view: CalendarView.schedule,
+          view: CalendarView.week,
           dataSource: EventsDataSource(events),
+          onTap: (details) {
+            if (details.appointments == null) return;
+            final event = details.appointments!.first;
+          },
         ));
   }
 }
